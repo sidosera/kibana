@@ -21,6 +21,7 @@ import { InvestigationNotFoundError } from './errors';
 export interface InvestigationConversation {
   /** The investigation id, which is the conversation id. */
   id: string;
+  agentId: string;
   /** Agent Builder's placeholder until Agent Builder titles it on the first round. */
   title: string;
   /** `metadata.status`; a missing status reads as open. */
@@ -31,7 +32,10 @@ export interface InvestigationConversation {
   created: boolean;
 }
 
-type ConversationWithAccess = Pick<Conversation, 'id' | 'title' | 'metadata' | 'template_id'> & {
+type ConversationWithAccess = Pick<
+  Conversation,
+  'id' | 'agent_id' | 'title' | 'metadata' | 'template_id'
+> & {
   permissions: ConversationPermissions;
 };
 
@@ -50,6 +54,7 @@ const toInvestigationConversation = (
   }
   return {
     id: conversation.id,
+    agentId: conversation.agent_id,
     title: conversation.title,
     status: conversation.metadata?.status === 'closed' ? 'closed' : 'open',
     workflowExecutionIds: toWorkflowExecutionIds(conversation.metadata),
@@ -102,10 +107,12 @@ export const getOrCreateInvestigationConversation = async ({
   conversations,
   id,
   beforeCreate,
+  agentId = NIGHTSHIFT_INVESTIGATION_AGENT_ID,
 }: {
   conversations: ConversationPublicClient;
   id: string;
   beforeCreate?: () => Promise<void>;
+  agentId?: string;
 }): Promise<InvestigationConversation> => {
   const existing = await findInvestigationConversation(conversations, id);
   if (existing) {
@@ -117,7 +124,7 @@ export const getOrCreateInvestigationConversation = async ({
     const create = () =>
       conversations.create({
         id,
-        agentId: NIGHTSHIFT_INVESTIGATION_AGENT_ID,
+        agentId,
         templateId: INVESTIGATION_TEMPLATE_ID,
         accessControl: { access_mode: ConversationAccessControlMode.Public },
       });

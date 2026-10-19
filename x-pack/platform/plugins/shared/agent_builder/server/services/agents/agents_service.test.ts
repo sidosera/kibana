@@ -152,12 +152,13 @@ describe('AgentsService', () => {
 
   describe('#start', () => {
     let started: AgentsServiceStart;
+    let serviceSetup: ReturnType<AgentsService['setup']>;
     let request: KibanaRequest;
     const ensureAgent = jest.fn();
 
     beforeEach(() => {
       isAllowedBuiltinAgentMock.mockReturnValue(true);
-      service.setup({ logger });
+      serviceSetup = service.setup({ logger });
       ensureAgent.mockReset();
       createClientMock.mockResolvedValue({
         getAgentsUsingTools: (params: { toolIds: string[] }) =>
@@ -202,6 +203,24 @@ describe('AgentsService', () => {
           agent: { type: chatAgentTypeId, configuration } as AgentDefinition,
           request,
         });
+
+      it('includes the agent identity when resolving a dynamic type configuration', async () => {
+        isAllowedAgentTypeMock.mockReturnValue(true);
+        const baseConfiguration = jest
+          .fn()
+          .mockReturnValue({ connector_ids: ['target-connector'] });
+        serviceSetup.registerType({ id: 'test-target-type', baseConfiguration });
+        const agent = createMockedAgent({
+          id: 'target-agent',
+          type: 'test-target-type',
+          configuration: { tools: [] },
+        });
+        const resolved = await started.resolveAgentConfiguration({ agent, request });
+        expect(baseConfiguration).toHaveBeenCalledWith(
+          expect.objectContaining({ agentId: 'target-agent', request })
+        );
+        expect(resolved.connector_ids).toEqual(['target-connector']);
+      });
 
       it('grants the default AI index to chat agents that have none', async () => {
         const resolved = await resolve({ tools: [], ai_indices: [] });

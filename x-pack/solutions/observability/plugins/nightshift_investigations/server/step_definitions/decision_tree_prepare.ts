@@ -9,7 +9,7 @@ import { z } from '@kbn/zod/v4';
 import { StepCategory } from '@kbn/workflows';
 import { createServerStepDefinition } from '@kbn/workflows-extensions/server';
 import type { Logger } from '@kbn/core/server';
-import { NIGHTSHIFT_INVESTIGATION_AGENT_ID } from '../agents/investigation';
+import { isInvestigationAgentId } from '../../common/telemetry_targets';
 import type { InvestigationToolCall } from '../decision_trees/accessed_trees';
 import { prepareReinforcementTurn } from '../decision_trees/register_decision_trees';
 import { toolCallsSchema } from './tool_calls_schema';
@@ -21,7 +21,7 @@ export const decisionTreePrepareStepDefinition = ({
   logger,
   isEnabled,
 }: {
-  getTelemetryConnectorId: () => string | undefined;
+  getTelemetryConnectorId: (agentId?: string) => string | undefined;
   logger: Logger;
   isEnabled?: () => boolean;
 }) =>
@@ -74,11 +74,11 @@ export const decisionTreePrepareStepDefinition = ({
 
       // Only the Nightshift investigator's rounds feed the decision trees: this workflow is its
       // post-execution hook, and another agent's round must not rewrite the trees.
-      if (agentId !== NIGHTSHIFT_INVESTIGATION_AGENT_ID) {
+      if (!isInvestigationAgentId(agentId)) {
         return skippedOutput;
       }
 
-      const telemetryConnectorId = getTelemetryConnectorId();
+      const telemetryConnectorId = getTelemetryConnectorId(agentId);
       const { spaceId } = context.contextManager.getContext().workflow;
       const { message, treeCount, turnKind } = await prepareReinforcementTurn({
         response,

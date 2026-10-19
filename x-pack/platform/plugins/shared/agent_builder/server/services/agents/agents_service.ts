@@ -183,7 +183,7 @@ export class AgentsService {
       return configurationResolver.resolveConfig({
         agentType: agent.type,
         configuration: agent.configuration,
-        ctx: { request, spaceId },
+        ctx: { request, spaceId, agentId: agent.id },
       });
     };
 

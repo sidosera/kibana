@@ -17,12 +17,13 @@ import type { InferenceServerStart } from '@kbn/inference-plugin/server';
 import type { ContextEnginePluginSetup } from '@kbn/context-engine-plugin/server';
 import { i18n } from '@kbn/i18n';
 import type { SandboxSession } from '@kbn/sandbox-plugin/server';
+import { isInvestigationAgentId } from '../../common/telemetry_targets';
 import {
   createInvestigationMemoryTelemetry,
   createOptimizeModel,
 } from '../lib/create_optimize_model';
 import { CORTEX_AI_INDEX_DEST, CORTEX_AI_INDEX_ID } from '../../common/cortex';
-import { NIGHTSHIFT_INVESTIGATION_AGENT_ID, SANDBOX_TOOL_IDS } from '../agents/investigation';
+import { SANDBOX_TOOL_IDS } from '../agents/investigation';
 import type { InvestigationToolCall } from '../decision_trees/accessed_trees';
 import { createCortexTelemetry } from '../telemetry';
 import { materializeCortex } from './materialize';
@@ -155,7 +156,7 @@ export const runCortexOptimize = async ({
   // hook runs this workflow, and other agents' rounds must not edit the wiki. An unidentified
   // caller is refused rather than trusted — the optimize workflow has a manual trigger, so it can
   // be run without an agent id.
-  if (agentId !== NIGHTSHIFT_INVESTIGATION_AGENT_ID) {
+  if (!isInvestigationAgentId(agentId)) {
     logger.info('Cortex optimizer skipped — round was not produced by the Nightshift investigator');
     return;
   }

@@ -24,6 +24,8 @@ export type BuiltInAgentConfiguration = AgentConfiguration;
 export interface AgentConfigContext {
   request: KibanaRequest;
   spaceId: string;
+  /** Agent whose effective configuration is being resolved. */
+  agentId?: string;
 }
 
 /**

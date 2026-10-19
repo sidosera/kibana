@@ -14,6 +14,7 @@ import {
 } from '@kbn/significant-events-schema';
 import { StepCategory } from '@kbn/workflows';
 import { createServerStepDefinition } from '@kbn/workflows-extensions/server';
+import { telemetryTargetNameSchema } from '../../common/telemetry_targets';
 import {
   DEFAULT_MANUAL_INVESTIGATION_SUBJECT_ID,
   INVESTIGATION_SUBJECT_TYPES,
@@ -27,6 +28,7 @@ import { consumeAutomationBudget } from '../lib/automations/automation_budget';
 
 const inputSchema = lazySchema(() =>
   z.object({
+    telemetry_target: telemetryTargetNameSchema.optional(),
     automation_id: z
       .string()
       .min(1)
@@ -172,6 +174,7 @@ export const triggerInvestigationStepDefinition = (
           summary: input.summary,
         },
         title: input.title,
+        ...(input.telemetry_target ? { telemetry_target: input.telemetry_target } : {}),
         trigger_type: input.trigger_type ?? 'automatic',
         message: input.message,
         source_ids: input.source_ids,

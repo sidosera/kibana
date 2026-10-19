@@ -56,6 +56,7 @@ export const resolveAbsolutePath = (filePath: string): string => {
 };
 
 export interface SandboxCallContext {
+  agentId?: string;
   request: KibanaRequest;
   /** Per-agent connector allow-list; credentials are never injected for connectors outside it. */
   allowedConnectorIds: readonly string[];
@@ -64,7 +65,9 @@ export interface SandboxCallContext {
 export const getSandboxCallContext = (context: {
   request: KibanaRequest;
   agentConfiguration?: AgentConfiguration;
+  runContext?: { stack: readonly RunContextStackEntry[] };
 }): SandboxCallContext => ({
+  agentId: context.runContext?.stack.findLast((entry) => entry.type === 'agent')?.agentId,
   request: context.request,
   allowedConnectorIds: context.agentConfiguration?.connector_ids ?? [],
 });
