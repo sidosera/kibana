@@ -76,9 +76,26 @@ const isIndexNotFoundError = (error: unknown): boolean => {
   return error.body.error?.type === 'index_not_found_exception';
 };
 
+const termOrKeywordFilter = (field: string, value: string) => ({
+  bool: {
+    should: [{ term: { [field]: value } }, { term: { [`${field}.keyword`]: value } }],
+    minimum_should_match: 1,
+  },
+});
+
+const termsOrKeywordFilter = (field: string, values: string[]) => ({
+  bool: {
+    should: [{ terms: { [field]: values } }, { terms: { [`${field}.keyword`]: values } }],
+    minimum_should_match: 1,
+  },
+});
+
 /**
  * Queries `.evaluation-online-scores` to find which candidate `trace_id`s already have a score
  * recorded for `(evaluatorName, evaluatorVersion, scoreName)` in `spaceId`.
+ *
+ * Uses `termOrKeywordFilter` so queries match both explicit Evals data-stream mappings
+ * (`keyword`) and dynamically mapped `.evaluation-online-scores` indices (`text` + `.keyword`).
  */
 export const findAlreadyJudgedTraceIds = async ({
   esClient,
@@ -115,12 +132,12 @@ export const findAlreadyJudgedTraceIds = async ({
         query: {
           bool: {
             filter: [
-              { term: { space_ids: spaceId } },
-              { term: { 'monitor.id': monitorId } },
-              { terms: { trace_id: uniqueTraceIds } },
-              { term: { 'evaluator.name': evaluatorName } },
-              { term: { 'evaluator.version': evaluatorVersion } },
-              ...(scoreName ? [{ term: { 'score.name': scoreName } }] : []),
+              termOrKeywordFilter('space_ids', spaceId),
+              termOrKeywordFilter('monitor.id', monitorId),
+              termsOrKeywordFilter('trace_id', uniqueTraceIds),
+              termOrKeywordFilter('evaluator.name', evaluatorName),
+              termOrKeywordFilter('evaluator.version', evaluatorVersion),
+              ...(scoreName ? [termOrKeywordFilter('score.name', scoreName)] : []),
             ],
           },
         },
@@ -354,8 +371,18 @@ export const fetchCandidateBackgroundRounds = async ({
       const roundId = readAttr(attrs, 'nightshift.round_id');
       if (typeof roundId === 'string' && roundId) entry.roundId ??= roundId;
 
-      const convId = readAttr(attrs, 'gen_ai.conversation.id');
-      if (typeof convId === 'string' && convId) entry.conversationId ??= convId;
+      const nsConvId = readAttr(attrs, 'nightshift.conversation_id');
+      const convId =
+        typeof nsConvId === 'string' && nsConvId
+          ? nsConvId
+          : readAttr(attrs, 'gen_ai.conversation.id');
+      if (typeof convId === 'string' && convId) {
+        if (typeof nsConvId === 'string' && nsConvId) {
+          entry.conversationId = nsConvId;
+        } else {
+          entry.conversationId ??= convId;
+        }
+      }
 
       const wfExecId = readAttr(attrs, 'nightshift.workflow_execution_id');
       if (typeof wfExecId === 'string' && wfExecId) entry.workflowExecutionId ??= wfExecId;

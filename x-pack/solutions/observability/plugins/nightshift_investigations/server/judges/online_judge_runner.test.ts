@@ -162,15 +162,11 @@ describe('server/judges/online_judge_runner', () => {
     it('filters already-judged traces, applies subsampling, and writes read + write scores to .evaluation-online-scores', async () => {
       const search = jest.fn(async ({ index, query }: any) => {
         if (index === ONLINE_SCORES_DATA_STREAM) {
-          // Pretend bg-trace-already-judged is already in .evaluation-online-scores for v1
-          const evaluatorTerm = query.bool.filter.find((f: any) => f.term?.['evaluator.name'])
-            ?.term?.['evaluator.name'];
-          const versionTerm = query.bool.filter.find((f: any) => f.term?.['evaluator.version'])
-            ?.term?.['evaluator.version'];
+          const queryJson = JSON.stringify(query);
           if (
-            versionTerm === 'v1' &&
-            (evaluatorTerm === READ_JUDGE_EVALUATOR_NAME ||
-              evaluatorTerm === WRITE_JUDGE_EVALUATOR_NAME)
+            queryJson.includes('"v1"') &&
+            (queryJson.includes(READ_JUDGE_EVALUATOR_NAME) ||
+              queryJson.includes(WRITE_JUDGE_EVALUATOR_NAME))
           ) {
             return {
               hits: { hits: [{ _source: { trace_id: 'bg-trace-already-judged' } }] },
