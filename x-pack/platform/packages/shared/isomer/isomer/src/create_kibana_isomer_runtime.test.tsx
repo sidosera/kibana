@@ -12,6 +12,7 @@ import { md } from '@elastic/isomer-sdk/markdown';
 import type { SlackBlock } from '@elastic/isomer-sdk/slack';
 import {
   classNames,
+  createKibanaCardFrame,
   isomerDistillery,
   isomerStyleAdapter,
   kibanaCardFrame,
@@ -165,7 +166,7 @@ describe('createKibanaIsomerRuntime', () => {
     it("use the caller's frames in place of the default", () => {
       const custom = createKibanaIsomerRuntime({
         packs: [definePrimitivePack({ id: 'test', primitives: [note] })],
-        frames: { wide: { ...kibanaCardFrame, defaultWidth: 1200 } },
+        frames: { wide: createKibanaCardFrame({ width: 1200 }) },
       });
 
       expect(custom.surfaces.snapshot.render(composition).width).toBe(1200);

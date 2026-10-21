@@ -6,9 +6,9 @@
  */
 
 import type { PrimitiveMetrics, PrimitiveNode } from '@elastic/isomer-sdk';
-import { CARD_CONTENT_WIDTH, CARD_FALLBACK_NODE_HEIGHT, borealisLight } from '@kbn/isomer-theme';
+import { CARD_FALLBACK_NODE_HEIGHT, borealisLight, cardContentWidth } from '@kbn/isomer-theme';
 
-// Heights in this pack are estimates for `kibanaCardFrame`, which draws a snapshot at exactly the height its body's estimates add up to. They lean tall: the card centers its body, so an overestimate becomes even padding, while an underestimate eats into it. Replace them with the card measuring its content once Isomer can (elastic/isomer#256).
+// Heights in this pack are estimates for a Kibana card (`createKibanaCardFrame`), which draws a snapshot at exactly the height its body's estimates add up to. They lean tall: the card centers its body, so an overestimate becomes even padding, while an underestimate eats into it. Replace them with the card measuring its content once Isomer can (elastic/isomer#256).
 
 const px = (value: string): number => parseFloat(value);
 
@@ -55,15 +55,16 @@ const AVERAGE_ADVANCE_EM = 0.56;
 export const textWidth = (text: string, fontSize: number): number =>
   text.length * fontSize * AVERAGE_ADVANCE_EM;
 
-/** How many lines `text` wraps to at `fontSize`, keeping its own line breaks, `inset` pixels in from the card's edges. */
-export const wrappedLines = (text: string, fontSize: number, inset = 0): number =>
-  text
+const lineCount = (text: string, advance: number, inset: number): number => {
+  const width = cardContentWidth() - inset;
+  return text
     .split('\n')
-    .reduce(
-      (lines, line) =>
-        lines + Math.max(1, Math.ceil(textWidth(line, fontSize) / (CARD_CONTENT_WIDTH - inset))),
-      0
-    );
+    .reduce((lines, line) => lines + Math.max(1, Math.ceil((line.length * advance) / width)), 0);
+};
+
+/** How many lines `text` wraps to at `fontSize`, keeping its own line breaks, `inset` pixels in from the edges of the card being estimated. */
+export const wrappedLines = (text: string, fontSize: number, inset = 0): number =>
+  lineCount(text, fontSize * AVERAGE_ADVANCE_EM, inset);
 
 /** The height of `text` set in `textStep`, wrapped `inset` pixels in from the card's edges. */
 export const textHeight = (text: string, { fontSize, lineHeight }: TextStep, inset = 0): number =>

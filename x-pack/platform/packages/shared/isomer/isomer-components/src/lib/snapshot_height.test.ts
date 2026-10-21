@@ -5,7 +5,11 @@
  * 2.0.
  */
 
-import { CARD_CONTENT_WIDTH, CARD_FALLBACK_NODE_HEIGHT } from '@kbn/isomer-theme';
+import {
+  CARD_FALLBACK_NODE_HEIGHT,
+  cardContentWidth,
+  createKibanaCardFrame,
+} from '@kbn/isomer-theme';
 import { TEXT, bodyNodeHeight, snapshotMetrics, textHeight, wrappedLines } from './snapshot_height';
 
 describe('wrappedLines', () => {
@@ -18,9 +22,30 @@ describe('wrappedLines', () => {
     const line = 'x'.repeat(200);
 
     expect(wrappedLines(line, TEXT.m.fontSize)).toBeGreaterThan(1);
-    expect(wrappedLines(line, TEXT.m.fontSize, CARD_CONTENT_WIDTH / 2)).toBeGreaterThan(
+    expect(wrappedLines(line, TEXT.m.fontSize, cardContentWidth() / 2)).toBeGreaterThan(
       wrappedLines(line, TEXT.m.fontSize)
     );
+  });
+
+  it('wraps at the width of the card being estimated', () => {
+    const line = 'x'.repeat(200);
+    const lines = (width: number): number => {
+      let counted = 0;
+      createKibanaCardFrame({ width }).estimateHeight(
+        { body: [{ type: 'probe' }] },
+        {
+          renderSnapshot: () => null,
+          estimateSnapshotHeight: () => {
+            counted = wrappedLines(line, TEXT.m.fontSize);
+            return 0;
+          },
+        }
+      );
+      return counted;
+    };
+
+    expect(lines(320)).toBeGreaterThan(lines(760));
+    expect(lines(760)).toBe(wrappedLines(line, TEXT.m.fontSize));
   });
 
   it('sets lines at the step line height', () => {

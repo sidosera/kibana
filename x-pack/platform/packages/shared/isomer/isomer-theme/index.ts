@@ -6,7 +6,12 @@
  */
 
 export { borealisLight } from './src/borealis_tokens.generated';
-export { CARD_CONTENT_WIDTH, CARD_FALLBACK_NODE_HEIGHT, kibanaCardFrame } from './src/card_frame';
+export {
+  CARD_FALLBACK_NODE_HEIGHT,
+  cardContentWidth,
+  createKibanaCardFrame,
+  kibanaCardFrame,
+} from './src/card_frame';
 export { classNames } from './src/class_names';
 export { ISOMER_ROOT_CLASS, isomerDistillery } from './src/distillery';
 export { ISOMER_STYLE_COLLECTOR, isomerStyleAdapter } from './src/style_adapter';

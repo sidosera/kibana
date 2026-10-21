@@ -10,7 +10,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { FrameDispatcher } from '@elastic/isomer-sdk';
 import { bindFrame } from '@elastic/isomer-sdk';
 import { borealisDark, borealisLight } from './borealis_tokens.generated';
-import { CARD_FALLBACK_NODE_HEIGHT, kibanaCardFrame } from './card_frame';
+import {
+  CARD_FALLBACK_NODE_HEIGHT,
+  cardContentWidth,
+  createKibanaCardFrame,
+  kibanaCardFrame,
+} from './card_frame';
 import { isomerStyleAdapter } from './style_adapter';
 
 const markdown = { type: 'markdown', text: 'There are **3** open alerts.' };
@@ -70,5 +75,53 @@ describe('kibanaCardFrame', () => {
     expect(borealisLight.color.background.plain).not.toBe(borealisDark.color.background.plain);
     expect(light).toContain(`background:${borealisLight.color.background.plain}`);
     expect(dark).toContain(`background:${borealisDark.color.background.plain}`);
+  });
+});
+
+describe('createKibanaCardFrame', () => {
+  const widthWhileEstimating = (width: number): number => {
+    let seen = 0;
+    createKibanaCardFrame({ width }).estimateHeight(
+      { body: [markdown] },
+      {
+        renderSnapshot: () => null,
+        estimateSnapshotHeight: () => {
+          seen = cardContentWidth();
+          return 0;
+        },
+      }
+    );
+    return seen;
+  };
+
+  it('is 760px wide by default, as kibanaCardFrame is', () => {
+    expect(createKibanaCardFrame().defaultWidth).toBe(760);
+    expect(kibanaCardFrame.defaultWidth).toBe(760);
+  });
+
+  it('sets the content width its primitives wrap at while it estimates, and restores it after', () => {
+    const outside = cardContentWidth();
+
+    expect(widthWhileEstimating(320)).toBe(320 - 48);
+    expect(widthWhileEstimating(1200)).toBe(1200 - 48);
+    expect(cardContentWidth()).toBe(outside);
+  });
+
+  it('restores the content width when an estimate throws', () => {
+    const outside = cardContentWidth();
+    const frame = createKibanaCardFrame({ width: 320 });
+
+    expect(() =>
+      frame.estimateHeight(
+        { body: [markdown] },
+        {
+          renderSnapshot: () => null,
+          estimateSnapshotHeight: () => {
+            throw new Error('estimate failed');
+          },
+        }
+      )
+    ).toThrow('estimate failed');
+    expect(cardContentWidth()).toBe(outside);
   });
 });

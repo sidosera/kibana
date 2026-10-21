@@ -12,11 +12,19 @@ import { borealisDark, borealisLight } from './borealis_tokens.generated';
 import { ISOMER_ROOT_CLASS, isomerDistillery } from './distillery';
 import type { BorealisTokenValues } from './to_token_values';
 
-const WIDTH = 760;
+const DEFAULT_WIDTH = 760;
 const PADDING = parseFloat(borealisLight.size.l);
 
-/** Width the card lays its body out in, for primitives that estimate how their text wraps. */
-export const CARD_CONTENT_WIDTH = WIDTH - 2 * PADDING;
+const contentWidthOf = (width: number): number => width - 2 * PADDING;
+
+let contentWidth = contentWidthOf(DEFAULT_WIDTH);
+
+/**
+ * Width the card being estimated lays its body out in, for primitives that estimate how their text wraps.
+ * A card from {@link createKibanaCardFrame} sets it while it estimates; otherwise it's the 760px card's.
+ * Isomer passes primitives no width yet (elastic/isomer#263), and estimating is synchronous, so it can't leak into another card's estimate.
+ */
+export const cardContentWidth = (): number => contentWidth;
 
 /**
  * Height of a node whose primitive declares no `metrics.snapshotHeight`, so an unmeasured body doesn't draw a zero-height image.
@@ -41,15 +49,28 @@ export const collectCardStyles = (collector: StylesCollector): void => {
   collector.useHandles([bodyStyles.handles.root]);
 };
 
-/** A 760px Borealis card: the default frame of Kibana's `snapshot` surface. */
-export const kibanaCardFrame: Frame<BorealisTokenValues> = {
-  defaultWidth: WIDTH,
+/**
+ * A Borealis card `width` pixels wide, 760 by default. Its primitives wrap their text at that width
+ * while it estimates its height, which a frame spread from another card with a new `defaultWidth`
+ * wouldn't do. A render's own `width` doesn't reach the estimate, so give a card its width here.
+ */
+export const createKibanaCardFrame = ({
+  width: cardWidth = DEFAULT_WIDTH,
+}: { width?: number } = {}): Frame<BorealisTokenValues> => ({
+  defaultWidth: cardWidth,
   theme: { light: borealisLight, dark: borealisDark },
-  estimateHeight: ({ body }, { estimateSnapshotHeight }) =>
-    body.reduce(
-      (height, node) => height + (estimateSnapshotHeight(node) || CARD_FALLBACK_NODE_HEIGHT),
-      2 * PADDING
-    ),
+  estimateHeight: ({ body }, { estimateSnapshotHeight }) => {
+    const previous = contentWidth;
+    contentWidth = contentWidthOf(cardWidth);
+    try {
+      return body.reduce(
+        (height, node) => height + (estimateSnapshotHeight(node) || CARD_FALLBACK_NODE_HEIGHT),
+        2 * PADDING
+      );
+    } finally {
+      contentWidth = previous;
+    }
+  },
   // The `.isomer` class scopes the theme's CSS variables, which the snapshot stylesheet reads. The body flows as blocks, as it does on the web, so adjacent margins collapse; centering splits whatever the height estimate overshoots between top and bottom.
   wrap: (_header, body, { width, height, theme: { color } }) => (
     <div
@@ -70,4 +91,7 @@ export const kibanaCardFrame: Frame<BorealisTokenValues> = {
       </div>
     </div>
   ),
-};
+});
+
+/** A 760px Borealis card: the default frame of Kibana's `snapshot` surface. */
+export const kibanaCardFrame: Frame<BorealisTokenValues> = createKibanaCardFrame();
