@@ -17,4 +17,4 @@ Each primitive is a folder under `src/primitives/`, registered in `src/pack.ts`.
 
 ## Isomer Studio
 
-`isomer-studio.config.ts` loads the pack, through `createKibanaIsomerRuntime`, into [Isomer Studio](https://github.com/elastic/isomer/tree/main/packages/isomer-studio), which isn't a Kibana dependency. From this directory, `npx @elastic/isomer-studio` opens it, and `npx @elastic/isomer-studio check` renders every example on every surface without a browser. `isomer-studio.fonts.ts` gives its PNGs Kibana's Inter and Roboto Mono.
+`isomer-studio.config.ts` loads the pack, through `createKibanaIsomerRuntime`, into [Isomer Studio](https://github.com/elastic/isomer/tree/main/packages/isomer-studio), which isn't a Kibana dependency. From this directory, `npx @elastic/isomer-studio` opens it, and `npx @elastic/isomer-studio check` renders every example on every surface without a browser. `isomer_studio_fonts.ts` gives its PNGs Kibana's Inter and Roboto Mono.
