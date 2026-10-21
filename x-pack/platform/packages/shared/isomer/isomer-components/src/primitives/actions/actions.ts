@@ -9,7 +9,7 @@ import { navigationHref, z, type PrimitiveNode } from '@elastic/isomer-sdk';
 import { fromChildren } from '@elastic/isomer-sdk/author';
 import { SLACK_LIMITS } from '@elastic/isomer-sdk/slack';
 
-import { CARD_CONTENT_WIDTH } from '@kbn/isomer-theme';
+import { cardContentWidth } from '@kbn/isomer-theme';
 import {
   componentIcon,
   definePrimitive,
@@ -76,10 +76,11 @@ export const actions = definePrimitive<ActionsNode, typeof actionsSchema>({
   icon,
   // Buttons wrap onto as many rows as their labels need.
   metrics: snapshotMetrics<ActionsNode>('actions', ({ buttons }) => {
+    const rowWidth = cardContentWidth();
     const rows = buttons.reduce(
       ({ count, used }, { label }) => {
         const width = textWidth(oneLine(label), TEXT.s.fontSize) + 2 * (SIZE.m + BORDER.thin);
-        return used > 0 && used + SIZE.s + width > CARD_CONTENT_WIDTH
+        return used > 0 && used + SIZE.s + width > rowWidth
           ? { count: count + 1, used: width }
           : { count, used: used + (used > 0 ? SIZE.s : 0) + width };
       },
