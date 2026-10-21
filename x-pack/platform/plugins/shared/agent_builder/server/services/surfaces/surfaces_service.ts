@@ -14,6 +14,7 @@ import type { AttachmentSurfaceCompositionContext } from '@kbn/agent-builder-ser
 import type { KibanaIsomerRuntime } from '@kbn/isomer-plugin/server';
 import type { Logger } from '@kbn/logging';
 import type { AttachmentServiceStart } from '../attachments';
+import { buildComposition } from './composition';
 import { slackSurface } from './slack';
 import type { SurfaceRenderer } from './types';
 
@@ -64,12 +65,10 @@ export class SurfacesServiceImpl implements SurfacesService {
     }
 
     try {
-      // The runtime and the Isomer SDK `./composition` imports stay on the heap once loaded, so
-      // neither loads until a round comes from a surface.
-      const [runtime, { buildComposition }] = await Promise.all([
-        this.getRuntime(),
-        import('./composition'),
-      ]);
+      // The Isomer SDK that `./composition` imports loads with Agent Builder; only the runtime and
+      // its packs wait for a round from a surface. Most of the SDK's cost is its markdown parser,
+      // which Isomer should load on first use: https://github.com/elastic/isomer/issues/262
+      const runtime = await this.getRuntime();
 
       const composition = await buildComposition({
         round,
