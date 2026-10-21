@@ -17,9 +17,7 @@ project:
   owner: '@elastic/appex-sharedux'
   sourceRoot: x-pack/platform/plugins/shared/isomer
 dependsOn:
-  - '@kbn/config-schema'
   - '@kbn/core'
-  - '@kbn/core-plugins-server'
   - '@kbn/isomer'
   - '@kbn/isomer-components'
 tags:
