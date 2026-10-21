@@ -33,7 +33,7 @@ const surfacesDeps = {
   surfacesService: new SurfacesServiceImpl({
     attachmentsService: { getTypeDefinition } as unknown as AttachmentServiceStart,
     logger: loggerMock.create(),
-    getRuntime: isomerPluginMock.createStartContract().getRuntime,
+    isomer: isomerPluginMock.createStartContract(),
   }),
   request,
 };

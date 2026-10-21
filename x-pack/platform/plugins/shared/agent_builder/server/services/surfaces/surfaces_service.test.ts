@@ -73,7 +73,7 @@ const renderPayload = (
   new SurfacesServiceImpl({
     attachmentsService,
     logger: loggerMock.create(),
-    getRuntime: isomerPluginMock.createStartContract().getRuntime,
+    isomer: isomerPluginMock.createStartContract(),
   }).renderPayload(event, { originType: ConversationOriginType.Slack, ...context });
 
 describe('renderPayload', () => {
@@ -132,11 +132,11 @@ describe('renderPayload', () => {
   });
 
   it('renders nothing for rounds without an origin, without building the runtime', async () => {
-    const { getRuntime } = isomerPluginMock.createStartContract();
+    const isomer = isomerPluginMock.createStartContract();
     const surfacesService = new SurfacesServiceImpl({
       attachmentsService: unmappedAttachmentsService,
       logger: loggerMock.create(),
-      getRuntime,
+      isomer,
     });
 
     await expect(
@@ -145,6 +145,6 @@ describe('renderPayload', () => {
         ...context,
       })
     ).resolves.toBeUndefined();
-    expect(getRuntime).not.toHaveBeenCalled();
+    expect(isomer.getRuntime).not.toHaveBeenCalled();
   });
 });

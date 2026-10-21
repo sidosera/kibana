@@ -11,7 +11,7 @@ import type {
   SurfacePayload,
 } from '@kbn/agent-builder-common';
 import type { AttachmentSurfaceCompositionContext } from '@kbn/agent-builder-server/attachments';
-import type { KibanaIsomerRuntime } from '@kbn/isomer-plugin/server';
+import type { IsomerPluginStart } from '@kbn/isomer-plugin/server';
 import type { Logger } from '@kbn/logging';
 import type { AttachmentServiceStart } from '../attachments';
 import { buildComposition } from './composition';
@@ -33,21 +33,21 @@ export interface SurfacesService {
 export class SurfacesServiceImpl implements SurfacesService {
   private readonly attachmentsService: AttachmentServiceStart;
   private readonly logger: Logger;
-  private readonly getRuntime: () => Promise<KibanaIsomerRuntime>;
+  private readonly isomer: IsomerPluginStart;
   private readonly surfaceRenderers: SurfaceRenderer[] = [slackSurface];
 
   constructor({
     attachmentsService,
     logger,
-    getRuntime,
+    isomer,
   }: {
     attachmentsService: AttachmentServiceStart;
     logger: Logger;
-    getRuntime: () => Promise<KibanaIsomerRuntime>;
+    isomer: IsomerPluginStart;
   }) {
     this.attachmentsService = attachmentsService;
     this.logger = logger;
-    this.getRuntime = getRuntime;
+    this.isomer = isomer;
   }
 
   async renderPayload(
@@ -68,7 +68,7 @@ export class SurfacesServiceImpl implements SurfacesService {
       // The Isomer SDK that `./composition` imports loads with Agent Builder; only the runtime and
       // its packs wait for a round from a surface. Most of the SDK's cost is its markdown parser,
       // which Isomer should load on first use: https://github.com/elastic/isomer/issues/262
-      const runtime = await this.getRuntime();
+      const runtime = await this.isomer.getRuntime();
 
       const composition = await buildComposition({
         round,

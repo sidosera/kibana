@@ -266,7 +266,7 @@ export class ServiceManager {
 
     const surfaces = new SurfacesServiceImpl({
       attachmentsService: attachments,
-      getRuntime: isomer.getRuntime,
+      isomer,
       logger: logger.get('surfaces'),
     });
 

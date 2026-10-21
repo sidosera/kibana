@@ -8,7 +8,6 @@
   "plugin": {
     "id": "isomer",
     "browser": false,
-    "server": true,
-    "configPath": ["xpack", "isomer"]
+    "server": true
   }
 }

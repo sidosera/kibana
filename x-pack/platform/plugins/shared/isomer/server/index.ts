@@ -7,9 +7,6 @@
 
 import type { PluginInitializerContext } from '@kbn/core/server';
 
-export { config } from './config';
-export type { IsomerPluginConfig } from './config';
-
 export const plugin = async (initializerContext: PluginInitializerContext) => {
   const { IsomerPlugin } = await import('./plugin');
   return new IsomerPlugin(initializerContext);
