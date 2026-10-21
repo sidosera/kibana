@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { CARD_CONTENT_WIDTH } from '@kbn/isomer-theme';
+import { cardContentWidth } from '@kbn/isomer-theme';
 import { BORDER, SIZE, TEXT, textHeight, textWidth, wrappedLines } from '../../lib';
 import type { TableView } from './table_model';
 
@@ -22,10 +22,11 @@ const columnWidths = ({ columns, rows }: DrawnTable): number[] => {
         ...rows.map((cells) => textWidth(cells[index] ?? '', TEXT.s.fontSize))
       ) + CELL_PADDING
   );
-  const share = CARD_CONTENT_WIDTH / columns.length;
+  const tableWidth = cardContentWidth();
+  const share = tableWidth / columns.length;
   const narrow = natural.filter((width) => width <= share);
   const wide = natural.filter((width) => width > share);
-  const left = CARD_CONTENT_WIDTH - narrow.reduce((sum, width) => sum + width, 0);
+  const left = tableWidth - narrow.reduce((sum, width) => sum + width, 0);
   const wideTotal = wide.reduce((sum, width) => sum + width, 0);
   return natural.map((width) =>
     width <= share || wideTotal <= left ? width : (left * width) / wideTotal
@@ -35,9 +36,10 @@ const columnWidths = ({ columns, rows }: DrawnTable): number[] => {
 /** The card height of a table as `tableReactRenderer` draws it: one heading row, which doesn't wrap, then each row as tall as its tallest cell. */
 export const tableSnapshotHeight = (view: DrawnTable): number => {
   const widths = columnWidths(view);
+  const tableWidth = cardContentWidth();
   const rowHeight = (lines: number) => lines * TEXT.s.lineHeight + 2 * SIZE.xs + BORDER.thin;
   const cellLines = (cell: string, index: number) =>
-    wrappedLines(cell, TEXT.s.fontSize, CARD_CONTENT_WIDTH - widths[index] + CELL_PADDING);
+    wrappedLines(cell, TEXT.s.fontSize, tableWidth - widths[index] + CELL_PADDING);
   return (
     SIZE.m +
     rowHeight(1) +
