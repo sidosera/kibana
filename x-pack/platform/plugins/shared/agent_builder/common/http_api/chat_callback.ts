@@ -22,6 +22,8 @@ export interface ChatCallbackRequestBodyPayload extends ChatRequestBodyPayload {
   };
   callback: {
     url: string;
+    /** Whether the caller uploads the files on `surface_payload.assets` before posting. */
+    surface_assets?: boolean;
   };
 }
 
