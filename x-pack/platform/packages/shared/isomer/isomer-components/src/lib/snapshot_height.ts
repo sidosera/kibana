@@ -51,6 +51,9 @@ export const TEXT = {
 // Inter's average advance is about half an em; this leans wide so wrapping estimates run tall.
 const AVERAGE_ADVANCE_EM = 0.56;
 
+// Roboto Mono, the code face, advances every glyph by 0.6em.
+const CODE_ADVANCE_EM = 0.6;
+
 /** The estimated width of one line of `text` at `fontSize`. */
 export const textWidth = (text: string, fontSize: number): number =>
   text.length * fontSize * AVERAGE_ADVANCE_EM;
@@ -65,6 +68,10 @@ const lineCount = (text: string, advance: number, inset: number): number => {
 /** How many lines `text` wraps to at `fontSize`, keeping its own line breaks, `inset` pixels in from the edges of the card being estimated. */
 export const wrappedLines = (text: string, fontSize: number, inset = 0): number =>
   lineCount(text, fontSize * AVERAGE_ADVANCE_EM, inset);
+
+/** {@link wrappedLines} for text set in the code face, as a `pre-wrap` code block wraps it. */
+export const wrappedCodeLines = (text: string, fontSize: number, inset = 0): number =>
+  lineCount(text, fontSize * CODE_ADVANCE_EM, inset);
 
 /** The height of `text` set in `textStep`, wrapped `inset` pixels in from the card's edges. */
 export const textHeight = (text: string, { fontSize, lineHeight }: TextStep, inset = 0): number =>

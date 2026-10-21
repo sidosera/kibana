@@ -16,6 +16,7 @@ export {
   snapshotMetrics,
   textHeight,
   textWidth,
+  wrappedCodeLines,
   wrappedLines,
   type TextStep,
 } from './snapshot_height';

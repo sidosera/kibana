@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { BORDER, SIZE, TEXT, textHeight, type TextStep } from '../../lib';
+import { BORDER, SIZE, TEXT, textHeight, wrappedCodeLines, type TextStep } from '../../lib';
 
 /** A block's height and the vertical margins `markdownReactRenderer` gives it. */
 interface Block {
@@ -30,6 +30,20 @@ const HEADING_TEXT: Record<number, TextStep> = {
   5: TEXT.s,
   6: TEXT.xs,
 };
+
+// A line ending in two or more spaces, or a backslash, ends in a hard break that the renderer keeps.
+const HARD_BREAK = /(?: {2,}|\\)$/;
+
+/** Joins a block's source lines as the renderer lays them out: soft breaks become spaces, and hard breaks stay line breaks. */
+const joinLines = (lines: string[]): string =>
+  lines
+    .map((line, index) =>
+      index < lines.length - 1 && HARD_BREAK.test(line)
+        ? `${line.replace(HARD_BREAK, '')}\n`
+        : `${line} `
+    )
+    .join('')
+    .trimEnd();
 
 // Drops link targets and emphasis markers, which take no width.
 const plain = (line: string): string =>
@@ -62,8 +76,11 @@ const toBlocks = (text: string): Block[] => {
       index++;
       const code = takeWhile((next) => !FENCE.test(next));
       index++;
+      // The block is `pre-wrap`, so a line wider than the card wraps inside its padding.
+      const codeLines =
+        code.length > 0 ? wrappedCodeLines(code.join('\n'), TEXT.s.fontSize, 2 * SIZE.s) : 0;
       blocks.push({
-        height: code.length * TEXT.s.lineHeight + 2 * SIZE.s,
+        height: codeLines * TEXT.s.lineHeight + 2 * SIZE.s,
         top: 0,
         bottom: TEXT.m.fontSize,
       });
@@ -109,7 +126,7 @@ const toBlocks = (text: string): Block[] => {
       const quoted = takeWhile((next) => QUOTE.test(next)).map(
         (next) => QUOTE.exec(next)?.[1] ?? next
       );
-      const inner = paragraph(quoted.join(' '), 2 * TEXT.m.fontSize + TEXT.m.fontSize / 4);
+      const inner = paragraph(joinLines(quoted), 2 * TEXT.m.fontSize + TEXT.m.fontSize / 4);
       blocks.push({ height: inner.height + inner.bottom, top: 0, bottom: TEXT.m.fontSize });
     } else {
       const prose = takeWhile(
@@ -117,7 +134,7 @@ const toBlocks = (text: string): Block[] => {
           next.trim() !== '' &&
           ![FENCE, HEADING, LIST_ITEM, TABLE_ROW, QUOTE, RULE].some((pattern) => pattern.test(next))
       );
-      blocks.push(paragraph(prose.join(' ')));
+      blocks.push(paragraph(joinLines(prose)));
     }
   }
   return blocks;

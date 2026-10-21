@@ -29,6 +29,23 @@ describe('markdownSnapshotHeight', () => {
     );
   });
 
+  it('wraps a code line wider than the card', () => {
+    expect(markdownSnapshotHeight(`\`\`\`\n${'x'.repeat(300)}\n\`\`\``)).toBeGreaterThan(
+      markdownSnapshotHeight('```\nx\n```')
+    );
+  });
+
+  it('keeps hard line breaks in prose and quotes', () => {
+    const fourLines = ['One', 'Two', 'Three', 'Four'];
+
+    expect(markdownSnapshotHeight(fourLines.join('  \n'))).toBe(4 * TEXT.m.lineHeight);
+    expect(markdownSnapshotHeight(fourLines.join('\\\n'))).toBe(4 * TEXT.m.lineHeight);
+    expect(markdownSnapshotHeight(fourLines.join('\n'))).toBe(TEXT.m.lineHeight);
+    expect(
+      markdownSnapshotHeight(fourLines.map((line) => `> ${line}`).join('  \n'))
+    ).toBeGreaterThan(markdownSnapshotHeight(fourLines.map((line) => `> ${line}`).join('\n')));
+  });
+
   it('counts link text, not the link target', () => {
     expect(markdownSnapshotHeight(`[Review](https://example.com/${'x'.repeat(300)})`)).toBe(
       TEXT.m.lineHeight
